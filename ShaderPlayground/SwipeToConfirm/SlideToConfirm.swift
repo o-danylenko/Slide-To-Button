@@ -1,0 +1,129 @@
+import SwiftUI
+
+/// A one-shot slide-to-confirm control: drag the handle past the threshold to fire
+/// `action`.
+///
+/// ```swift
+/// @State private var isPlacing = false
+///
+/// SlideToConfirm(isConfirmed: $isPlacing) { place() } label: {
+///     Text("Slide to Place Bet").font(.headline)
+/// }
+/// ```
+///
+/// The caller owns the latch, so a confirm can also arrive from outside the gesture — a
+/// server event, a push — and re-arming is the caller's call:
+///
+/// ```swift
+/// withAnimation(.slideSnapBack) { isPlacing = false }
+/// ```
+///
+/// The track sizes itself to its label, so Dynamic Type and multi-line copy grow it rather
+/// than being clipped by it. `.disabled(_:)` dims it and drops the gesture.
+///
+/// The only type that owns the gesture. It wires interaction to state and hands a read-only
+/// state to `SlideTrack` for drawing — so the drag is written, and tested, once.
+struct SlideToConfirm<Label: View>: View {
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ScaledMetric(relativeTo: .headline) private var inset: CGFloat = 4
+
+    /// Whether the slide has been confirmed and the handle parked at the trailing edge.
+    ///
+    /// Owned by the caller, because the gesture is not the only thing that can confirm —
+    /// a server event or a push can latch it too, and only the caller knows when the work
+    /// behind it has finished. Set it back to `false` to re-arm; wrap that in
+    /// `withAnimation(.slideSnapBack)` to spring the handle home.
+    @Binding var isConfirmed: Bool
+
+    let action: () -> Void
+    @ViewBuilder let label: Label
+
+    /// The finger's progress along the track, or `nil` when nothing is touching.
+    ///
+    /// SwiftUI resets this on cancellation as well as on lift — unlike `onEnded`, which
+    /// never fires when the system claims the gesture — and `resetTransaction` gives the
+    /// snap-back its spring. That keeps animation off the drag path: nothing interpolates
+    /// while the finger is down.
+    @GestureState(resetTransaction: Transaction(animation: .slideSnapBack))
+    private var slideProgress: CGFloat?
+
+    /// The gesture's progress and the caller's latch resolved into one value.
+    ///
+    /// Both inputs are load-bearing — `slideProgress` resets itself on cancellation, while
+    /// the latch outlives the gesture — but only their combination is meaningful, so the
+    /// precedence is settled here and every reader downstream sees a single state.
+    private var state: SlideState {
+        if isConfirmed { return .confirmed }
+        if let slideProgress { return .sliding(progress: slideProgress) }
+        return .idle
+    }
+
+    var body: some View {
+        SlideTrack(label: label, state: state, inset: inset)
+            .opacity(isEnabled ? 1 : 0.5)
+            .overlay(alignment: .topLeading) { hitRegion }
+            .accessibilityRepresentation {
+                // VoiceOver cannot drag a handle, so it gets a plain button.
+                Button(action: action) { label }
+            }
+            .sensoryFeedback(.impact(weight: .medium), trigger: state.isSliding) { _, sliding in
+                sliding
+            }
+            .sensoryFeedback(.success, trigger: isConfirmed) { _, confirmed in confirmed }
+    }
+
+    /// An invisible circle over the handle, carrying the gesture.
+    ///
+    /// Positioned by the same `handleOffset` the track draws with, so the touch target and
+    /// the visible handle cannot drift apart — and the paint layer stays free of the
+    /// gesture.
+    private var hitRegion: some View {
+        GeometryReader { proxy in
+            let geometry = SlideGeometry(trackSize: proxy.size, inset: inset)
+            Color.clear
+                .frame(width: geometry.handleDiameter, height: geometry.handleDiameter)
+                .contentShape(.circle)
+                .offset(geometry.handleOffset(at: state.progress))
+                // High priority keeps an enclosing scroll view or sheet from claiming the
+                // touch first.
+                .highPriorityGesture(drag(in: geometry), including: isEnabled ? .all : .none)
+        }
+    }
+
+    // MARK: - Gesture
+
+    private func drag(in geometry: SlideGeometry) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .updating($slideProgress) { value, slideProgress, _ in
+                slideProgress = geometry.progress(forTranslation: value.translation.width)
+            }
+            .onChanged { value in
+                // Asked of the gesture value rather than of a derived flag, so a crossing
+                // is caught in the event that produced it instead of a render pass later.
+                let progress = geometry.progress(forTranslation: value.translation.width)
+                guard !isConfirmed, state.applying(progress: progress) == .confirmed else {
+                    return
+                }
+                confirm()
+            }
+    }
+
+    private func confirm() {
+        guard !reduceMotion else {
+            isConfirmed = true
+            action()
+            return
+        }
+        withAnimation(.slideConfirm) {
+            isConfirmed = true
+        } completion: {
+            action()
+        }
+    }
+}
+
+// There is deliberately no `PrimitiveButtonStyle` adapter. A style has no storage of its
+// own, and a `Button` offers no channel for a confirm that arrives from outside the
+// gesture — so such an adapter could only latch, never re-arm. Use `SlideToConfirm`
+// directly and hold the latch where the work is.
