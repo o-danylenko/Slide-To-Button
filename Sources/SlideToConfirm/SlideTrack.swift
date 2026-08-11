@@ -108,7 +108,7 @@ struct SlideTrack<Label: View, HandleContent: View>: View {
                 Capsule().fill(fallback)
             }
 
-        case .filled(let style):
+        case .shapeStyle(let style):
             Capsule().fill(style)
         }
     }

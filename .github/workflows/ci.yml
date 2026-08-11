@@ -9,40 +9,42 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Liquid Glass needs the iOS 26 SDK, so the toolchain is pinned rather than worked around: a
+# fallback for an older Xcode would mean shipping code paths that only CI ever compiles.
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+
 jobs:
   test:
     name: Test
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
-      # The state machine and the geometry are pure values, so they run on the host
-      # without a simulator.
+      - name: Show toolchain
+        run: swift --version && xcodebuild -version
+
+      # The state machine and the geometry are pure values, so they run on the host without a
+      # simulator.
       - name: Run tests
         run: swift test
 
   build:
     name: Build for iOS
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
       - name: Build
-        run: |
-          xcodebuild build \
-            -scheme SlideToConfirm \
-            -destination 'generic/platform=iOS' \
-            | xcbeautify --quiet || xcodebuild build \
-            -scheme SlideToConfirm \
-            -destination 'generic/platform=iOS'
+        run: xcodebuild build -scheme SlideToConfirm -destination 'generic/platform=iOS'
 
   docs:
     name: Build documentation
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
-      # Fails the build on an unresolved symbol link, so the catalog cannot rot.
+      # Fails on an unresolved symbol link, so the catalog cannot rot.
       - name: Build DocC
         run: |
           xcodebuild docbuild \

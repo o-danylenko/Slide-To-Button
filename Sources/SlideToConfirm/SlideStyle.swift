@@ -67,10 +67,14 @@ extension SlideStyle {
         case clearGlass(fallback: AnyShapeStyle = AnyShapeStyle(.quaternary))
 
         /// An ordinary `ShapeStyle`: no glass on any version.
-        case filled(AnyShapeStyle)
+        ///
+        /// Spelled differently from ``filled(_:)`` on purpose: a case and a factory of the same
+        /// name are ambiguous at any call site passing an `AnyShapeStyle`, since it satisfies both.
+        case shapeStyle(AnyShapeStyle)
 
+        /// A surface painted with any `ShapeStyle` — a colour, a gradient, a material.
         public static func filled<S: ShapeStyle>(_ style: S) -> Surface {
-            .filled(AnyShapeStyle(style))
+            .shapeStyle(AnyShapeStyle(style))
         }
     }
 }
