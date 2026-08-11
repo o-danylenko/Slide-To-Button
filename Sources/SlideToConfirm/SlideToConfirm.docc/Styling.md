@@ -88,8 +88,7 @@ Both values scale with Dynamic Type, so a fixed height still grows as text does.
 ### Styles
 
 - ``SlideStyle``
+
+### Surfaces
+
 - ``SlideStyle/Surface``
-
-### Applying a style
-
-- ``SwiftUI/View/slideStyle(_:)``

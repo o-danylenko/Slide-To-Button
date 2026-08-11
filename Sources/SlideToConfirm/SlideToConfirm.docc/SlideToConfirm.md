@@ -26,7 +26,7 @@ falls back to an ordinary translucent fill, so one style ships to both.
 
 ### The caller owns the confirm latch
 
-``SlideToConfirm/isConfirmed`` is a binding rather than internal state, because the gesture is not
+``SlideToConfirm/init(isConfirmed:action:label:)`` is a binding rather than internal state, because the gesture is not
 the only thing that can confirm — a server event or a push notification can latch it too, and only
 the caller knows when the work behind it has finished.
 
@@ -67,6 +67,18 @@ it confirms.
 
 Under Reduce Motion the confirm fires immediately instead of animating into place.
 
+## Animations
+
+Three springs are published as extensions on `Animation`, for use when the caller drives the latch
+itself:
+
+- `.slideSnapBack` returns the knob to rest when a slide is abandoned, and is what to wrap a re-arm
+  in.
+- `.slideConfirm` carries the knob the rest of the way once the threshold is crossed.
+- `.slideAppearance` scales the knob as a slide begins and ends.
+
+The style modifier is likewise an extension: `View.slideStyle(_:)`.
+
 ## Topics
 
 ### Creating a control
@@ -77,14 +89,7 @@ Under Reduce Motion the confirm fires immediately instead of animating into plac
 ### Styling
 
 - ``SlideStyle``
-- ``SwiftUI/View/slideStyle(_:)``
 
 ### Reading the gesture
 
 - ``SlideState``
-
-### Animations
-
-- ``SwiftUI/Animation/slideSnapBack``
-- ``SwiftUI/Animation/slideConfirm``
-- ``SwiftUI/Animation/slideAppearance``
