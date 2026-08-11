@@ -67,6 +67,8 @@ SlideToConfirm(isConfirmed: $isSending) { send() } label: {
 
 ### Styling
 
+<img src="Media/materials.gif" width="380" alt="Four bars with different materials: clear glass, untinted glass, half-tinted glass, and a flat fill. Sliding each shows the same gesture reading differently through each material.">
+
 ```swift
 .slideStyle(.tinted(.green))                    // untinted glass, green knob
 .slideStyle(.monochrome(.red))                  // glass tinted at half strength
@@ -80,6 +82,18 @@ Style is carried in the environment, so setting it on a container reaches every 
 The capsule is the glass and the knob is solid, deliberately: glass is a lens, so it needs area to
 refract through and something behind it to bend. A knob-sized pane has neither. The knob stays
 solid so it remains legible against whatever the capsule is refracting.
+
+### Size
+
+`height` defaults to a normal control height. Pass `nil` where the label must be free to grow —
+multi-line copy, or large Dynamic Type sizes, which a fixed height cannot expand to fit.
+
+<img src="Media/sizing.gif" width="380" alt="One control cycling through heights of 40, 56 and 76 points, the knob scaling with the capsule; below it a second control with height nil, sized by its own two lines of copy.">
+
+```swift
+.slideStyle(.tinted(.blue, inset: 3, height: 40))
+.slideStyle(.monochrome(.purple, height: nil))
+```
 
 ## Design
 
