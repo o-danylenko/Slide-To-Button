@@ -5,16 +5,16 @@ A slide-to-confirm control for actions that should not fire by accident.
 ## Overview
 
 A tap is one event; a slide is a hundred. That makes a slide the right gesture for anything
-irreversible — placing a bet, sending money, deleting a record — because a pocket or a stray thumb
+irreversible — sending money, deleting a record, arming a device — because a pocket or a stray thumb
 cannot produce one.
 
 ```swift
-@State private var isPlacing = false
+@State private var isSending = false
 
-SlideToConfirm(isConfirmed: $isPlacing) {
-    place()
+SlideToConfirm(isConfirmed: $isSending) {
+    send()
 } label: {
-    Text("Slide to Place Bet").font(.headline)
+    Text("Slide to Confirm").font(.headline)
 }
 ```
 
@@ -33,7 +33,7 @@ the caller knows when the work behind it has finished.
 Set it back to `false` to re-arm:
 
 ```swift
-withAnimation(.slideSnapBack) { isPlacing = false }
+withAnimation(.slideSnapBack) { isSending = false }
 ```
 
 A control that never re-arms is the usual bug here. If the action can fail, clear the latch on the
@@ -45,8 +45,8 @@ The knob's contents are a function of ``SlideState``, so an in-flight spinner is
 state rather than a second flag to keep in sync:
 
 ```swift
-SlideToConfirm(isConfirmed: $isPlacing) { place() } label: {
-    Text("Slide to Place Bet")
+SlideToConfirm(isConfirmed: $isSending) { send() } label: {
+    Text("Slide to Confirm")
 } handleContent: { state in
     if state == .confirmed {
         ProgressView().tint(.white)

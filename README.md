@@ -4,8 +4,10 @@ A slide-to-confirm control for SwiftUI. Liquid Glass on iOS 26, a translucent fi
 
 ![Platform](https://img.shields.io/badge/iOS-17%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![License](https://img.shields.io/badge/license-MIT-green)
 
+<img src="Media/confirm.gif" width="420" alt="Sliding to send a payment: the knob travels, the trail fills behind it, a spinner runs while the transfer completes, then the control re-arms.">
+
 A tap is one event; a slide is a hundred. That makes a slide the right gesture for anything
-irreversible — placing a bet, sending money, deleting a record — because a pocket or a stray thumb
+irreversible — sending money, deleting a record, arming a device — because a pocket or a stray thumb
 cannot produce one.
 
 ## Installation
@@ -21,12 +23,12 @@ Requires iOS 17. Liquid Glass activates on iOS 26 and later.
 ```swift
 import SlideToConfirm
 
-@State private var isPlacing = false
+@State private var isSending = false
 
-SlideToConfirm(isConfirmed: $isPlacing) {
-    place()
+SlideToConfirm(isConfirmed: $isSending) {
+    send()
 } label: {
-    Text("Slide to Place Bet").font(.headline)
+    Text("Slide to Confirm").font(.headline)
 }
 ```
 
@@ -40,7 +42,7 @@ that can confirm — a server event or a push can latch it too, and only the cal
 work behind it has finished. Set it back to `false` to re-arm:
 
 ```swift
-withAnimation(.slideSnapBack) { isPlacing = false }
+withAnimation(.slideSnapBack) { isSending = false }
 ```
 
 If the action can fail, clear the latch on the error path as well as the success path. A control
@@ -52,8 +54,8 @@ The knob's contents are a function of the state, so an in-flight spinner is a sw
 second flag to keep in sync:
 
 ```swift
-SlideToConfirm(isConfirmed: $isPlacing) { place() } label: {
-    Text("Slide to Place Bet")
+SlideToConfirm(isConfirmed: $isSending) { send() } label: {
+    Text("Slide to Confirm")
 } handleContent: { state in
     if state == .confirmed {
         ProgressView().tint(.white)

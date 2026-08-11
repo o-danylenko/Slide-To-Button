@@ -41,7 +41,7 @@ public struct SlideStyle {
         surface: Surface = .glass(),
         tint: Color,
         inset: CGFloat = 4,
-        height: CGFloat? = nil
+        height: CGFloat? = 52
     ) {
         self.surface = surface
         self.tint = tint
@@ -88,7 +88,7 @@ extension SlideStyle {
     public static func tinted(
         _ tint: Color,
         inset: CGFloat = 4,
-        height: CGFloat? = nil
+        height: CGFloat? = 52
     ) -> SlideStyle {
         SlideStyle(surface: .glass(), tint: tint, inset: inset, height: height)
     }
@@ -99,7 +99,7 @@ extension SlideStyle {
     public static func monochrome(
         _ tint: Color,
         inset: CGFloat = 4,
-        height: CGFloat? = nil
+        height: CGFloat? = 52
     ) -> SlideStyle {
         SlideStyle(
             surface: .glass(
@@ -116,7 +116,7 @@ extension SlideStyle {
     public static func clear(
         _ tint: Color,
         inset: CGFloat = 4,
-        height: CGFloat? = nil
+        height: CGFloat? = 52
     ) -> SlideStyle {
         SlideStyle(surface: .clearGlass(), tint: tint, inset: inset, height: height)
     }
@@ -126,7 +126,7 @@ extension SlideStyle {
         _ tint: Color,
         surface: S = .quaternary,
         inset: CGFloat = 4,
-        height: CGFloat? = nil
+        height: CGFloat? = 52
     ) -> SlideStyle {
         SlideStyle(surface: .filled(surface), tint: tint, inset: inset, height: height)
     }

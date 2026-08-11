@@ -75,7 +75,7 @@ smaller knob in a roomier capsule.
 sizes — so setting it means taking responsibility for the label's font too:
 
 ```swift
-SlideToConfirm(isConfirmed: $isPlacing) { … } label: {
+SlideToConfirm(isConfirmed: $isSending) { … } label: {
     Text("Slide to Confirm").font(.subheadline.weight(.semibold))
 }
 .slideStyle(.tinted(.blue, inset: 3, height: 40))

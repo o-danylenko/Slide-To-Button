@@ -4,10 +4,10 @@ import SwiftUI
 /// `action`.
 ///
 /// ```swift
-/// @State private var isPlacing = false
+/// @State private var isSending = false
 ///
-/// SlideToConfirm(isConfirmed: $isPlacing) { place() } label: {
-///     Text("Slide to Place Bet").font(.headline)
+/// SlideToConfirm(isConfirmed: $isSending) { send() } label: {
+///     Text("Slide to Confirm").font(.headline)
 /// }
 /// ```
 ///
@@ -15,7 +15,7 @@ import SwiftUI
 /// server event, a push — and re-arming is the caller's call:
 ///
 /// ```swift
-/// withAnimation(.slideSnapBack) { isPlacing = false }
+/// withAnimation(.slideSnapBack) { isSending = false }
 /// ```
 ///
 /// The track sizes itself to its label, so Dynamic Type and multi-line copy grow it rather

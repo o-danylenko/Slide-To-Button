@@ -39,29 +39,50 @@ struct SlideTrack<Label: View, HandleContent: View>: View {
 
     // MARK: - Label
 
-    /// The label flanked by two hidden knob footprints.
+    /// The label, kept clear of the knob and centred on the capsule.
     ///
-    /// Those footprints are what make the control self-sizing: they establish the capsule's
-    /// height — a square scaled to the label's own height, plus the inset — and the lane the
-    /// centred label must keep clear, from one rule rather than two constants that could drift
-    /// apart.
+    /// No `HStack`. A horizontal alignment guide only has an effect when the container it sits in
+    /// aligns on that axis, and an `HStack` aligns vertically — so a guide on a label inside one is
+    /// simply never consulted. The `frame` below is the container that asks for it.
+    ///
+    /// `padding` reserves the knob's lane; the guide re-centres within what is left. Padding alone
+    /// would leave the label centred in the lane rather than in the capsule, which is off by half
+    /// the knob; the guide alone would let a long label slide under the knob.
     private var labelRow: some View {
-        HStack(spacing: 0) {
-            handleFootprint
-            label.frame(maxWidth: .infinity)
-            handleFootprint
-        }
-        // Applied to the row rather than the capsule, so the footprints see the final height and
-        // keep deriving the knob's diameter from it. On the capsule instead, the track would
-        // resize while the knob stayed the label's size.
-        .frame(height: height.map { max(0, $0 - inset * 2) })
-        .padding(inset)
+        label
+            // Reserves the knob's lane, so a long label wraps instead of running beneath it.
+            .padding(.leading, knobWidth(labelHeight: nil))
+            // Reported in the label's own coordinates: claiming the centre lies half a knob to the
+            // right of where it really does makes the frame place the label that much further left,
+            // which is exactly the offset between the lane's centre and the capsule's.
+            .alignmentGuide(HorizontalAlignment.center) { dimensions in
+                dimensions[HorizontalAlignment.center]
+                    + knobWidth(labelHeight: dimensions.height) / 2
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            // The footprint sets the height without competing for width: a square as tall as the
+            // row is also that wide, and as an overlay it takes its size from the row rather than
+            // adding to it.
+            .background(alignment: .leading) { handleFootprint }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(height: height.map { max(0, $0 - inset * 2) })
+            .padding(inset)
     }
 
     /// A square as tall as the row, so its width equals the knob's diameter without ever naming a
     /// size.
     private var handleFootprint: some View {
         Color.clear.aspectRatio(1, contentMode: .fit)
+    }
+
+    /// The knob's width, which is also the footprint's and therefore the row's content height.
+    ///
+    /// Two sources, because the row is sized two ways: from the style when a height is given, and
+    /// from the label itself when it is not — in which case the label is the tallest child, so its
+    /// height *is* the row's. Exact either way, and no measurement pass to get it.
+    private func knobWidth(labelHeight: CGFloat?) -> CGFloat {
+        if let height { return max(0, height - inset * 2) }
+        return labelHeight ?? 0
     }
 
     // MARK: - Layers
@@ -147,6 +168,16 @@ struct SlideTrack<Label: View, HandleContent: View>: View {
 // MARK: - Default handle
 
 /// The mark inside the knob when a caller does not supply one.
+///
+/// White, which reads on any tint dark enough to want a white mark — most of them. A light tint
+/// wants its own mark rather than a guess: luminance thresholds misjudge saturated hues, so this
+/// states one colour and lets the caller override it.
+///
+/// ```swift
+/// } handleContent: { _ in
+///     Image(systemName: "chevron.right").foregroundStyle(.black)
+/// }
+/// ```
 public struct SlideChevron: View {
     public init() {}
 
