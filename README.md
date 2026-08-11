@@ -2,7 +2,7 @@
 
 A slide-to-confirm control for SwiftUI. Liquid Glass on iOS 26, a translucent fill below it.
 
-![Platform](https://img.shields.io/badge/iOS-17%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![License](https://img.shields.io/badge/license-MIT-green)
+[![CI](https://github.com/o-danylenko/SlideToConfirm/actions/workflows/ci.yml/badge.svg)](https://github.com/o-danylenko/SlideToConfirm/actions/workflows/ci.yml) ![Platform](https://img.shields.io/badge/iOS-17%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![License](https://img.shields.io/badge/license-MIT-green)
 
 <img src="Media/confirm.gif" width="420" alt="Sliding to send a payment: the knob travels, the trail fills behind it, a spinner runs while the transfer completes, then the control re-arms.">
 
@@ -13,7 +13,7 @@ cannot produce one.
 ## Installation
 
 ```swift
-.package(url: "https://github.com/<you>/SlideToConfirm", from: "1.0.0")
+.package(url: "https://github.com/o-danylenko/SlideToConfirm", from: "1.0.0")
 ```
 
 Requires iOS 17. Liquid Glass activates on iOS 26 and later.

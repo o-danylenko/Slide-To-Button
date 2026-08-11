@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # The state machine and the geometry are pure values, so they run on the host
+      # without a simulator.
+      - name: Run tests
+        run: swift test
+
+  build:
+    name: Build for iOS
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -scheme SlideToConfirm \
+            -destination 'generic/platform=iOS' \
+            | xcbeautify --quiet || xcodebuild build \
+            -scheme SlideToConfirm \
+            -destination 'generic/platform=iOS'
+
+  docs:
+    name: Build documentation
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Fails the build on an unresolved symbol link, so the catalog cannot rot.
+      - name: Build DocC
+        run: |
+          xcodebuild docbuild \
+            -scheme SlideToConfirm \
+            -destination 'generic/platform=iOS' \
+            OTHER_DOCC_FLAGS="--warnings-as-errors"
