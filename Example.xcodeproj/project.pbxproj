@@ -6,19 +6,38 @@
 	objectVersion = 70;
 	objects = {
 
+/* Begin XCLocalSwiftPackageReference section */
+		A100001000000000000000A0 /* XCLocalSwiftPackageReference "SlideToConfirm" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A100001000000000000000A1 /* SlideToConfirm */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SlideToConfirm;
+		};
+/* End XCSwiftPackageProductDependency section */
+
 /* Begin PBXFileReference section */
 		A10000100000000000000012 /* ShaderPlayground.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShaderPlayground.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A1000010000000000000000A /* ShaderPlayground */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = ShaderPlayground; sourceTree = "<group>"; };
+		A1000010000000000000000A /* Example */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Example; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXBuildFile section */
+		A100001000000000000000A2 /* SlideToConfirm in Frameworks */ = {isa = PBXBuildFile; productRef = A100001000000000000000A1 /* SlideToConfirm */; };
+/* End PBXBuildFile section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A1000010000000000000000F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A100001000000000000000A2 /* SlideToConfirm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -60,6 +79,9 @@
 				A1000010000000000000000A /* ShaderPlayground */,
 			);
 			name = ShaderPlayground;
+			packageProductDependencies = (
+				A100001000000000000000A1 /* SlideToConfirm */,
+			);
 			productName = ShaderPlayground;
 			productReference = A10000100000000000000012 /* ShaderPlayground.app */;
 			productType = "com.apple.product-type.application";
@@ -90,6 +112,9 @@
 			mainGroup = A10000100000000000000002;
 			minimizedProjectReferenceProxies = 1;
 			productRefGroup = A10000100000000000000003 /* Products */;
+			packageReferences = (
+				A100001000000000000000A0 /* XCLocalSwiftPackageReference "SlideToConfirm" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
