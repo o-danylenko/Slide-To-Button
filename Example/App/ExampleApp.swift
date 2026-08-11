@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct ShaderPlaygroundApp: App {
+struct ExampleApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

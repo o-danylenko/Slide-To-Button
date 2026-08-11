@@ -2,6 +2,8 @@
 
 A slide-to-confirm control for SwiftUI. Liquid Glass on iOS 26, a translucent fill below it.
 
+![Platform](https://img.shields.io/badge/iOS-17%2B-blue) ![Swift](https://img.shields.io/badge/Swift-6.0-orange) ![License](https://img.shields.io/badge/license-MIT-green)
+
 A tap is one event; a slide is a hundred. That makes a slide the right gesture for anything
 irreversible — placing a bet, sending money, deleting a record — because a pocket or a stray thumb
 cannot produce one.
@@ -118,3 +120,7 @@ simulator.
 `Example.xcodeproj` is a gallery of the built-in styles over an animated backdrop. The backdrop is
 not decoration: over a flat background, glass has nothing to refract and reads as flat colour.
 Dragging a knob across a moving field is the only way to see the material behave like a lens.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
