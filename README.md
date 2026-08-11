@@ -11,8 +11,8 @@
 <p align="center">
   <a href="https://github.com/o-danylenko/SlideToConfirm/actions/workflows/ci.yml"><img src="https://github.com/o-danylenko/SlideToConfirm/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://o-danylenko.github.io/SlideToConfirm/documentation/slidetoconfirm/"><img src="https://img.shields.io/badge/docs-DocC-blue" alt="Documentation"></a>
-  <img src="https://img.shields.io/badge/iOS-17%2B-blue" alt="iOS 17+">
-  <img src="https://img.shields.io/badge/Swift-6.0-orange" alt="Swift 6.0">
+  <a href="https://swiftpackageindex.com/o-danylenko/SlideToConfirm"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fo-danylenko%2FSlideToConfirm%2Fbadge%3Ftype%3Dswift-versions" alt="Swift versions"></a>
+  <a href="https://swiftpackageindex.com/o-danylenko/SlideToConfirm"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fo-danylenko%2FSlideToConfirm%2Fbadge%3Ftype%3Dplatforms" alt="Platforms"></a>
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT">
 </p>
 

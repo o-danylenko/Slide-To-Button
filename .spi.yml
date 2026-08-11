@@ -1,0 +1,5 @@
+# Lets the Swift Package Index build and host the DocC catalogue alongside the compatibility matrix.
+version: 1
+builder:
+  configs:
+    - documentation_targets: [SlideToConfirm]
