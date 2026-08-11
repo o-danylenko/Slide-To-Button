@@ -4,9 +4,14 @@ A slide-to-confirm control for actions that should not fire by accident.
 
 ## Overview
 
-A tap is one event; a slide is a hundred. That makes a slide the right gesture for anything
-irreversible — sending money, deleting a record, arming a device — because a pocket or a stray thumb
-cannot produce one.
+A tap is one event; a slide is a hundred, in one direction, held for most of a second. That makes a
+slide the right gesture for anything irreversible — sending money, deleting a record, arming a
+device — because a pocket or a stray thumb cannot produce one.
+
+The pattern is common in shipped apps and absent from SwiftUI, so it gets rebuilt often. This one is
+built around the three things those rebuilds usually get wrong: a trail that lags a fast flick, a
+confirm that latches forever because the state is private, and no way to show the work the confirm
+started.
 
 ```swift
 @State private var isSending = false
@@ -26,9 +31,10 @@ falls back to an ordinary translucent fill, so one style ships to both.
 
 ### The caller owns the confirm latch
 
-``SlideToConfirm/init(isConfirmed:action:label:)`` is a binding rather than internal state, because the gesture is not
-the only thing that can confirm — a server event or a push notification can latch it too, and only
-the caller knows when the work behind it has finished.
+The `isConfirmed` argument to ``SlideToConfirm/init(isConfirmed:action:label:)`` is a binding rather
+than internal state, because the gesture is not the only thing that can confirm — a server event or
+a push notification can latch it too, and only the caller knows when the work behind it has
+finished.
 
 Set it back to `false` to re-arm:
 

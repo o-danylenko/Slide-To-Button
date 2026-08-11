@@ -1,0 +1,76 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deployment at a time, and never cancel one part-way: a half-published site is worse than a
+# stale one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build DocC archive
+        run: |
+          xcodebuild docbuild \
+            -scheme SlideToConfirm \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath .build/docs \
+            OTHER_DOCC_FLAGS="--warnings-as-errors"
+
+      # Pages serves the site from a subdirectory, so every generated link has to be rewritten to
+      # include the repository name.
+      - name: Transform for static hosting
+        run: |
+          ARCHIVE=$(find .build/docs -name '*.doccarchive' -maxdepth 6 | head -1)
+          "$(xcrun --find docc)" process-archive transform-for-static-hosting "$ARCHIVE" \
+            --output-path _site \
+            --hosting-base-path SlideToConfirm
+
+      # The generated root is the single-page shell, which renders nothing on its own. A redirect
+      # sends the bare domain to the module page a reader actually wants.
+      - name: Redirect the root to the module page
+        run: |
+          cat > _site/index.html <<'HTML'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <title>SlideToConfirm</title>
+            <meta http-equiv="refresh" content="0; url=documentation/slidetoconfirm/">
+            <link rel="canonical" href="documentation/slidetoconfirm/">
+          </head>
+          <body><a href="documentation/slidetoconfirm/">SlideToConfirm documentation</a></body>
+          </html>
+          HTML
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
