@@ -2,7 +2,7 @@
   <img src="Media/confirm.gif" width="420" alt="Sliding to send a payment: the knob travels, the trail fills behind it, a spinner runs while the transfer completes, then the control re-arms.">
 </p>
 
-<h1 align="center">SlideToConfirm</h1>
+<h1 align="center">Slide-To</h1>
 
 <p align="center">
   A slide-to-confirm control for SwiftUI, built for Liquid Glass.
