@@ -30,5 +30,5 @@ First release.
   it. Haptics at both ends of the gesture, and an immediate confirm under Reduce Motion.
 - A DocC catalog, and an example app demonstrating each style over a moving backdrop.
 
-[Unreleased]: https://github.com/o-danylenko/SlideToConfirm/compare/1.0.0...HEAD
-[1.0.0]: https://github.com/o-danylenko/SlideToConfirm/releases/tag/1.0.0
+[Unreleased]: https://github.com/o-danylenko/Slide-To-Button/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/o-danylenko/Slide-To-Button/releases/tag/1.0.0

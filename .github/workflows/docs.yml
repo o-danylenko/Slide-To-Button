@@ -41,7 +41,7 @@ jobs:
           ARCHIVE=$(find .build/docs -name '*.doccarchive' -maxdepth 6 | head -1)
           "$(xcrun --find docc)" process-archive transform-for-static-hosting "$ARCHIVE" \
             --output-path _site \
-            --hosting-base-path SlideToConfirm
+            --hosting-base-path Slide-To-Button
 
       # The generated root is the single-page shell, which renders nothing on its own. A redirect
       # sends the bare domain to the module page a reader actually wants.

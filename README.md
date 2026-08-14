@@ -9,10 +9,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/o-danylenko/SlideToConfirm/actions/workflows/ci.yml"><img src="https://github.com/o-danylenko/SlideToConfirm/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://o-danylenko.github.io/SlideToConfirm/documentation/slidetoconfirm/"><img src="https://img.shields.io/badge/docs-DocC-blue" alt="Documentation"></a>
-  <a href="https://swiftpackageindex.com/o-danylenko/SlideToConfirm"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fo-danylenko%2FSlideToConfirm%2Fbadge%3Ftype%3Dswift-versions" alt="Swift versions"></a>
-  <a href="https://swiftpackageindex.com/o-danylenko/SlideToConfirm"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fo-danylenko%2FSlideToConfirm%2Fbadge%3Ftype%3Dplatforms" alt="Platforms"></a>
+  <a href="https://github.com/o-danylenko/Slide-To-Button/actions/workflows/ci.yml"><img src="https://github.com/o-danylenko/Slide-To-Button/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://o-danylenko.github.io/Slide-To-Button/documentation/slidetoconfirm/"><img src="https://img.shields.io/badge/docs-DocC-blue" alt="Documentation"></a>
+  <a href="https://swiftpackageindex.com/o-danylenko/Slide-To-Button"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fo-danylenko%2FSlide-To-Button%2Fbadge%3Ftype%3Dswift-versions" alt="Swift versions"></a>
+  <a href="https://swiftpackageindex.com/o-danylenko/Slide-To-Button"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fo-danylenko%2FSlide-To-Button%2Fbadge%3Ftype%3Dplatforms" alt="Platforms"></a>
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT">
 </p>
 
@@ -58,7 +58,7 @@ below that it falls back to a translucent fill, and nothing in the API mentions 
 Add the package in Xcode with **File → Add Package Dependencies**, or declare it directly:
 
 ```swift
-.package(url: "https://github.com/o-danylenko/SlideToConfirm", from: "1.0.0")
+.package(url: "https://github.com/o-danylenko/Slide-To-Button", from: "1.0.0")
 ```
 
 Then add `SlideToConfirm` to your target's dependencies.
@@ -242,7 +242,7 @@ behave like a lens.
 ## Documentation
 
 The API reference is published at
-[o-danylenko.github.io/SlideToConfirm](https://o-danylenko.github.io/SlideToConfirm/documentation/slidetoconfirm/).
+[o-danylenko.github.io/SlideToConfirm](https://o-danylenko.github.io/Slide-To-Button/documentation/slidetoconfirm/).
 
 To build it yourself, open the package in Xcode and choose **Product → Build Documentation**, or:
 
