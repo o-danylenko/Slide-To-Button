@@ -34,6 +34,16 @@ struct SlideTrack<Label: View, HandleContent: View>: View {
             .background(alignment: .leading) { measured { trail(in: $0) } }
             .clipShape(.capsule)
             .background { surface }
+            // Wraps the capsule and everything in it, but not the knob below — the knob stands in for
+            // the finger, and a finger does not deform. Putting the effect outside both would bend the
+            // knob along with the surface, which reads as the control melting rather than as a surface
+            // being disturbed.
+            //
+            // The knob's position is computed here rather than carried by a preference: this view is
+            // already given both the state and the inset, so a `GeometryReader` supplies the only
+            // missing piece. Routing the same values outward and back was what left the effect with
+            // nothing to draw from.
+            .modifier(WakeGeometry(wake: style.wake, surface: style.surface, state: state, inset: inset))
             .overlay(alignment: .topLeading) { measured { knob(in: $0) } }
     }
 

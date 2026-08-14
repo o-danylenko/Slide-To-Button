@@ -49,7 +49,7 @@ struct MaterialsDemo: View {
                 code: ".solid(.orange)",
                 title: "Slide to archive",
                 icon: "archivebox.fill",
-                style: .solid(.orange),
+                style: SlideStyle.solid(.orange).slideStyle,
                 prefersLightLabel: false
             )
         ]

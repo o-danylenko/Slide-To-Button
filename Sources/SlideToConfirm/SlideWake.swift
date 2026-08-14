@@ -100,99 +100,77 @@ public struct SlideWake: Equatable, Sendable {
 
 // MARK: - Applying
 
-extension View {
-    /// Adds ripples trailing the knob of a ``SlideToConfirm``.
-    ///
-    /// The effect reads the knob's position from a preference the control publishes, so it can be
-    /// applied anywhere outside the control — directly, or on a container holding several.
-    ///
-    /// ```swift
-    /// SlideToConfirm(isConfirmed: $isSending) { send() } label: {
-    ///     Text("Slide to Confirm")
-    /// }
-    /// .slideStyle(.solid(.blue))
-    /// .slideWake(.still)
-    /// ```
-    ///
-    /// - Important: Requires a non-glass surface, so pair it with
-    ///   ``SlideStyle/solid(_:surface:inset:height:)``. A distortion pass rasterises what it bends, and
-    ///   Liquid Glass samples what lies behind it at composite time — so a distorted glass capsule draws
-    ///   nothing at all. On a glass style the wake is skipped and the control renders normally; it
-    ///   cannot be made to work at the drawing layer, so this is a choice between the two materials
-    ///   rather than a limitation to work around.
-    ///
-    /// Nothing is allocated and no timeline runs until a ripple exists, and everything stops again once
-    /// they settle. Under Reduce Motion the effect does not draw: ripples carry no information the knob
-    /// does not.
-    ///
-    /// - Parameter wake: How the ripples behave. Pass ``SlideWake/none`` to switch them off.
-    public func slideWake(_ wake: SlideWake = .still) -> some View {
-        modifier(SlideWakeEffect(wake: wake))
-    }
-}
-
-/// Accumulates the knob's path into ripples and distorts the view beneath.
+/// Applies the wake to the capsule, or nothing at all when the style carries none.
 ///
-/// Holds every piece of state the effect needs, which is what keeps the control free of it: no wake
-/// modifier means no trail, no timeline, and nothing to pay for.
-struct SlideWakeEffect: ViewModifier {
-    let wake: SlideWake
+/// Wraps the surface and the label but not the knob — the knob is drawn as an overlay after this, because
+/// it stands in for the finger and a finger does not deform. Bending both reads as the control melting
+/// rather than as a surface being disturbed.
+///
+/// Everything it needs is already here. `state` gives the progress and the press; the size arrives with
+/// the effect itself, since `visualEffect` hands its closure a `GeometryProxy`. So there is nothing to
+/// measure, store, or wait for — and no "not yet measured" case to represent.
+struct WakeGeometry: ViewModifier {
+    let wake: SlideWake?
+    let surface: SlideStyle.Surface
+    let state: SlideState
+    let inset: CGFloat
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.slideStyle) private var style
 
+    /// The trail of places the knob has been.
+    ///
+    /// Lives here rather than in the control, so a style without a wake carries no ripple storage.
     @State private var trail = SlideRippleTrail()
-    @State private var knob = SlideKnob.unmeasured
 
     /// Whether the effect should draw at all.
     ///
-    /// Suppressed on a glass surface, which a distortion pass would erase rather than bend — see
-    /// ``SlideStyle/Surface/survivesDistortion``. Failing quietly here is deliberate: the alternative is
-    /// a control whose capsule disappears when a caller adds an unrelated-looking modifier, and no
-    /// combination of the two can be made to work at the drawing layer.
+    /// The surface check is a backstop rather than the guard: the public API cannot produce a glass style
+    /// carrying a wake, since the effects hang off ``SlideStyle/Solid``. It still matters for a
+    /// `SlideStyle` assembled by hand, where both properties are settable.
     ///
-    /// Also dropped under Reduce Motion, since ripples carry no information the knob does not.
+    /// Dropped under Reduce Motion, since ripples carry no information the knob does not.
     private var isActive: Bool {
-        wake.isActive && !reduceMotion && style.surface.survivesDistortion
+        guard let wake else { return false }
+        return wake.isActive && !reduceMotion && surface.survivesDistortion
     }
 
+    @ViewBuilder
     func body(content: Content) -> some View {
-        content
-            // Reads what the control publishes rather than asking it for anything, so the dependency
-            // points inward: the control does not know this exists.
-            .onPreferenceChange(SlideKnobKey.self) { knob in
-                guard isActive else { return }
-                self.knob = knob
+        if let wake, isActive {
+            // Redraws every frame while ripples live. Shader arguments are not interpolated — a new value
+            // renders immediately, with nothing in between — so the clock that feeds them has to tick per
+            // frame rather than be handed to an animation.
+            TimelineView(.animation(paused: trail.isEmpty)) { context in
+                let sources = trail.sourceData(at: context.date, wake: wake)
+
+                content.distortionEffect(
+                    wake.shader(sources: sources),
+                    maxSampleOffset: wake.maxSampleOffset
+                )
+            }
+            // The proxy is the control's own, so the knob's position follows from the layout without any
+            // measurement of ours. Struck from the state rather than from a render pass, so a ripple is
+            // born of the gesture that caused it.
+            .onGeometryChange(for: SlideKnob.self) { proxy in
+                knob(in: SlideGeometry(trackSize: proxy.size, inset: inset))
+            } action: { knob in
                 trail.follow(knob, wake: wake)
             }
-            .modifier(rippleDistortion)
-    }
-
-    /// The distortion, on a timeline that only runs while there is something to animate.
-    ///
-    /// A `TimelineView` cannot be applied conditionally without changing the view's identity, so the
-    /// condition lives in `paused:` — where a settled trail costs a paused schedule rather than a
-    /// rebuilt hierarchy.
-    private var rippleDistortion: some ViewModifier {
-        SlideRippleDistortion(wake: wake, trail: trail, isActive: isActive)
-    }
-}
-
-/// Draws the ripples. Paint only: it is handed a finished trail and never mutates one.
-private struct SlideRippleDistortion: ViewModifier {
-    let wake: SlideWake
-    let trail: SlideRippleTrail
-    let isActive: Bool
-
-    func body(content: Content) -> some View {
-        TimelineView(.animation(paused: !isActive || trail.isEmpty)) { context in
+        } else {
             content
-                .distortionEffect(
-                    wake.shader(sources: trail.sourceData(at: context.date, wake: wake)),
-                    maxSampleOffset: wake.maxSampleOffset,
-                    isEnabled: isActive
-                )
         }
+    }
+
+    /// Where the ripples originate, and whether a finger is down.
+    private func knob(in geometry: SlideGeometry) -> SlideKnob {
+        let offset = geometry.handleOffset(at: state.progress)
+        let radius = geometry.handleDiameter / 2
+
+        return SlideKnob(
+            centre: CGPoint(x: offset.width + radius, y: offset.height + radius),
+            diameter: geometry.handleDiameter,
+            isDragging: state.isSliding
+        )
     }
 }
 
@@ -226,7 +204,8 @@ struct SlideRippleTrail: Equatable {
     /// decides whether the surface was disturbed. Keeping that judgement here is what lets the emit
     /// policy change — a different cadence, a different strength curve — without touching the drawing.
     mutating func follow(_ knob: SlideKnob, wake: SlideWake) {
-        guard knob.isMeasured else { return }
+        // A track narrower than its knob, or one asked about before layout, has no surface to disturb.
+        guard knob.diameter > 0 else { return }
 
         let now = Date.now
 

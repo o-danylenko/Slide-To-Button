@@ -45,7 +45,7 @@ below that it falls back to a translucent fill, and nothing in the API mentions 
 - [Progress in the knob](#progress-in-the-knob)
 - [Styles](#styles)
 - [Size and density](#size-and-density)
-- [Ripples](#ripples)
+- [Effects](#effects)
 - [Accessibility](#accessibility)
 - [How it works](#how-it-works)
 - [Example app](#example-app)
@@ -163,56 +163,38 @@ with Dynamic Type.
 Pass `height: nil` where the label must be free to grow — multi-line copy, or the accessibility text
 sizes, which a fixed height cannot expand to fit.
 
-## Ripples
+## Effects
 
-Optional. The knob can leave a wake behind it, as though it were dragged across water:
-
-```swift
-SlideToConfirm(isConfirmed: $isSending) { send() } label: {
-    Text("Slide to Confirm")
-}
-.slideStyle(.solid(.blue))
-.slideWake(.still)
-```
-
-Three presets, cheapest first: `.still`, `.water`, `.splash`.
+Metal effects that respond to the drag. They hang off a flat style, so a combination that cannot work
+does not compile.
 
 <details>
-<summary><strong>How it works, and why it needs a solid surface</strong></summary>
+<summary><strong>Ripples</strong> — the knob leaves a wake, as though dragged across water</summary>
 
 <br>
 
-Each place the knob has been becomes a ripple source that keeps radiating after the knob has moved on.
-That is what makes it a wake rather than a wobble — a single origin tracking the knob cannot leave
-anything behind it. The wave is born at its source and travels outward at a finite speed, so the phase
-is written `k * (distance - speed * age)`: pixels near that moving radius are in the crest, and the rest
-are windowed out.
+<p align="center">
+  <img src="Media/ripples.gif" width="460" alt="A slide control on a moving gradient. Dragging the knob sends ripples out behind it, bending the capsule and the label like the surface of water.">
+</p>
 
-Sources are emitted on a **time** cadence, not a distance threshold. Water has no threshold; it is
-disturbed continuously while something moves through it. Pacing by distance makes the surface respond
-in steps, which reads as a mechanism rather than a liquid. Ripple strength follows the knob's speed, so
-a slow drag leaves a faint trail and a flick a strong one.
+```swift
+SlideToConfirm(isConfirmed: $isSending) { send() } label: {
+    Text("Slide to send")
+}
+.slideStyle(.solid(.white, surface: Color.white.opacity(0.22)).stillEffect)
+```
 
-Displacement is radial, which is what makes each ring act as a lens, and decays twice: with age,
-because the disturbance dies, and with distance, because a spreading ring divides its energy over a
-longer circumference. Ripples are retired when they decay below visibility rather than when a buffer
-fills — a fixed-size buffer evicts the oldest whether or not it has finished, and at low damping it has
-not.
+Three presets, cheapest first: `stillEffect`, `waterEffect`, `splashEffect`. For your own parameters,
+`rippleEffect(_:)` takes a `SlideWake`.
 
-**Cost.** Measured on an iPhone 14 Pro with Metal System Trace over 13 seconds of dragging: 0.38ms mean
-per encoder, 3.01ms worst, GPU busy 4.5% of the window, thermal state Fair throughout. Two early-outs
-in the shader — dead ripple, and pixel outside the wavefront — mean most sources cost almost nothing
-most of the time. Nothing is allocated and no timeline runs until a ripple exists.
+Ripple strength follows the knob's speed, so a slow drag leaves a faint trail and a flick a strong one.
 
-**Why solid only.** `distortionEffect` rasterises what it bends. Liquid Glass samples what lies behind
-it at composite time, so once flattened it has nothing left to sample and the capsule draws nothing at
-all. The two cannot be composed at the drawing layer, so this is a choice between materials rather than
-a limitation to work around: on a glass style the wake is skipped and the control renders normally.
+Needs a flat, translucent surface. Ripples are lenses, so they bend what is behind the capsule — over an
+opaque fill there is nothing to refract, and Liquid Glass cannot be distorted at all. That is why the
+effects live on `.solid(…)`: `.tinted(.blue).stillEffect` is not an expression.
 
-**Design.** The control publishes one value — `SlideKnob`, a centre, a diameter, and whether a finger
-is down — through a preference. The wake is a `ViewModifier` that reads it and owns its own trail. So
-the dependency points inward: `SlideToConfirm` does not know the effect exists, a control without the
-modifier carries no ripple storage, and a second effect needs no change to the control.
+Costs 0.38ms mean per GPU encoder on an iPhone 14 Pro. A style without an effect allocates nothing and
+runs no timeline.
 
 </details>
 
@@ -226,7 +208,7 @@ modifier carries no ripple storage, and a second effect needs no change to the c
 
 ## How it works
 
-Four types, each with a single job:
+Five types, each with a single job:
 
 | Type | Responsibility | Depends on |
 | --- | --- | --- |
@@ -234,7 +216,7 @@ Four types, each with a single job:
 | `SlideGeometry` | translation and size to progress | CoreGraphics |
 | `SlideToConfirm` | the gesture and its storage | SwiftUI |
 | `SlideTrack` | drawing | SwiftUI |
-| `SlideWake` | ripples, if applied | SwiftUI + Metal |
+| `SlideWake` | ripples, if the style has them | SwiftUI + Metal |
 
 `SlideTrack` holds no `@State`, no `@GestureState` and no gesture, so no change to how the control
 looks can regress how it drags.

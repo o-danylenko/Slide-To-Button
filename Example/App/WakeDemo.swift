@@ -1,77 +1,61 @@
 import SlideToConfirm
 import SwiftUI
 
-/// The three wake presets, on real controls.
+/// One control with ripples, on the moving backdrop. Built to be recorded.
 ///
-/// Uses the public API only — `.slideWake(_:)` on an ordinary `SlideToConfirm` — because that is the
-/// thing worth demonstrating. The effect needs nothing from the caller but the modifier.
+/// Nothing but the control: no captions, no comparison, no code labels. A README image has to read at a
+/// glance, and anything else in the frame competes with the effect it is there to show.
 ///
-/// Solid surfaces throughout, because the wake cannot bend glass: a distortion rasterises its content,
-/// and Liquid Glass has nothing left to sample once it has been flattened. The last row shows the
-/// difference the effect makes by leaving it off.
+/// The surface is translucent white because ripples are lenses — they bend what is *behind* the capsule.
+/// Over an opaque fill they have nothing to refract and collapse to a shimmer at the rim.
 struct WakeDemo: View {
-    private struct Variant: Identifiable {
-        let id: Int
-        let code: String
-        let title: String
-        let wake: SlideWake
-        let tint: Color
-    }
-
-    @State private var confirmed: Set<Int> = []
-
-    private let variants: [Variant] = [
-        Variant(id: 0, code: ".slideWake(.still)", title: "Slide to send",
-                wake: .still, tint: .blue),
-        Variant(id: 1, code: ".slideWake(.water)", title: "Slide to unlock",
-                wake: .water, tint: .teal),
-        Variant(id: 2, code: ".slideWake(.splash)", title: "Slide to launch",
-                wake: .splash, tint: .indigo),
-        Variant(id: 3, code: "no wake", title: "Slide to archive",
-                wake: .none, tint: .orange)
-    ]
+    @State private var isConfirmed = false
+    @State private var work: Task<Void, Never>?
 
     var body: some View {
-        VStack(spacing: 20) {
-            ForEach(variants) { variant in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(variant.code)
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.white.opacity(0.9))
-                        .shadow(radius: 2)
-
-                    SlideToConfirm(isConfirmed: binding(for: variant.id)) {} label: {
-                        Text(variant.title).font(.headline)
-                    }
-                    .slideStyle(.solid(variant.tint, surface: variant.tint.opacity(0.18)))
-                    .slideWake(variant.wake)
-                }
+        SlideToConfirm(isConfirmed: $isConfirmed) {
+            rearm()
+        } label: {
+            Text("Slide to send")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(.white)
+        } handleContent: { state in
+            if state == .confirmed {
+                ProgressView().tint(.black.opacity(0.6))
+            } else {
+                Image(systemName: "chevron.right")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(.black.opacity(0.65))
             }
-
-            Text("Drag slowly for a faint trail, flick for a strong one.")
-                .font(.footnote)
-                .foregroundStyle(.white.opacity(0.85))
         }
-        .padding(20)
+        .slideStyle(Self.style)
+        .padding(.horizontal, 24)
+        .onDisappear { work?.cancel() }
     }
 
-    /// Confirming re-arms after a beat, so the screen loops without being touched again.
-    private func binding(for id: Int) -> Binding<Bool> {
-        Binding(
-            get: { confirmed.contains(id) },
-            set: { isConfirmed in
-                guard isConfirmed else {
-                    confirmed.remove(id)
-                    return
-                }
-                confirmed.insert(id)
-                Task {
-                    try? await Task.sleep(for: .seconds(1.2))
-                    withAnimation(.slideSnapBack) { _ = confirmed.remove(id) }
-                }
-            }
-        )
+    /// Holds the confirm briefly, then re-arms, so the screen loops while it is being recorded.
+    ///
+    /// Called from the action rather than wrapped around the binding: the gesture sets `isConfirmed`
+    /// itself, so a binding that only re-arms on its own writes never fires and the knob stays parked at
+    /// the trailing edge.
+    private func rearm() {
+        work?.cancel()
+        work = Task {
+            try? await Task.sleep(for: .seconds(1.1))
+            guard !Task.isCancelled else { return }
+
+            withAnimation(.slideSnapBack) { isConfirmed = false }
+        }
     }
+
+    /// Taller than the default, because ripples are radial: a 52pt capsule crops their vertical half and
+    /// leaves the wake reading as a horizontal smear rather than as rings.
+    private static let style = SlideStyle.solid(
+        .white,
+        surface: Color.white.opacity(0.22),
+        inset: 7,
+        height: 84
+    ).stillEffect
 }
 
 #Preview {

@@ -19,6 +19,9 @@ struct ContentView: View {
 
     @State private var demo: Demo = .wake
 
+    /// Whether the picker is hidden for a recording. Double tap the top of the screen to toggle.
+    @State private var isRecording = true
+
     var body: some View {
         ZStack {
             Backdrop()
@@ -43,6 +46,10 @@ struct ContentView: View {
         }
     }
 
+    /// Hidden while a demo is being recorded, since a README image should hold nothing but the control.
+    ///
+    /// Still laid out rather than removed, so hiding it does not shift the demo up the screen and change
+    /// the framing between one recording and the next.
     private var picker: some View {
         Picker("Demo", selection: $demo) {
             ForEach(Demo.allCases) { Text($0.rawValue).tag($0) }
@@ -50,6 +57,13 @@ struct ContentView: View {
         .pickerStyle(.segmented)
         .padding(.horizontal, 24)
         .padding(.top, 8)
+        .opacity(isRecording ? 0 : 1)
+        // Double tap anywhere along the top to bring it back.
+        .overlay {
+            Color.clear
+                .contentShape(.rect)
+                .onTapGesture(count: 2) { isRecording.toggle() }
+        }
     }
 }
 

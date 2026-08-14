@@ -129,23 +129,7 @@ public struct SlideToConfirm<Label: View, HandleContent: View>: View {
                 // High priority keeps an enclosing scroll view or sheet from claiming the
                 // touch first.
                 .highPriorityGesture(drag(in: geometry), including: isEnabled ? .all : .none)
-                // Published from here because this view already knows both the geometry and the
-                // gesture, and it is the only place that does. Anything wrapping the control can read
-                // it; the control does not know whether anything does.
-                .preference(key: SlideKnobKey.self, value: knob(in: geometry))
         }
-    }
-
-    /// The knob's position and press state, for effects layered outside the control.
-    private func knob(in geometry: SlideGeometry) -> SlideKnob {
-        let offset = geometry.handleOffset(at: state.progress)
-        let radius = geometry.handleDiameter / 2
-
-        return SlideKnob(
-            centre: CGPoint(x: offset.width + radius, y: offset.height + radius),
-            diameter: geometry.handleDiameter,
-            isDragging: state.isSliding
-        )
     }
 
     // MARK: - Gesture

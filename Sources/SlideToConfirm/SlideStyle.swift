@@ -37,16 +37,26 @@ public struct SlideStyle {
     /// label's font too.
     public var height: CGFloat?
 
+    /// Ripples trailing the knob, or `nil` for none.
+    ///
+    /// Part of the style rather than a modifier of its own, because it is only possible on some
+    /// surfaces: a distortion pass rasterises what it bends, and Liquid Glass has nothing left to
+    /// sample once flattened. Reaching it through ``SlideStyle/Solid`` is what makes the impossible
+    /// combination impossible to write — see ``SlideStyle/Solid/stillEffect``.
+    public var wake: SlideWake?
+
     public init(
         surface: Surface = .glass(),
         tint: Color,
         inset: CGFloat = 4,
-        height: CGFloat? = 52
+        height: CGFloat? = 52,
+        wake: SlideWake? = nil
     ) {
         self.surface = surface
         self.tint = tint
         self.inset = inset
         self.height = height
+        self.wake = wake
     }
 }
 
@@ -126,15 +136,71 @@ extension SlideStyle {
     }
 
     /// A flat look: no glass even where the system offers it.
+    ///
+    /// Returns a ``SlideStyle/Solid`` rather than a plain style, which is what makes the distortion
+    /// effects reachable — they are only possible on a surface that can be rasterised.
     public static func solid<S: ShapeStyle>(
         _ tint: Color,
         surface: S = .quaternary,
         inset: CGFloat = 4,
         height: CGFloat? = 52
-    ) -> SlideStyle {
-        SlideStyle(surface: .filled(surface), tint: tint, inset: inset, height: height)
+    ) -> Solid {
+        Solid(
+            style: SlideStyle(
+                surface: .filled(surface),
+                tint: tint,
+                inset: inset,
+                height: height
+            )
+        )
     }
 }
+
+// MARK: - Solid styles
+
+extension SlideStyle {
+    /// A style on a flat surface, which is the only kind a distortion can bend.
+    ///
+    /// Exists to put ``stillEffect`` and its siblings somewhere a glass style cannot reach. The
+    /// alternative — one `wake` property on every style, skipped at runtime when the surface is glass —
+    /// makes an impossible combination compile and then quietly do nothing. Here the type system states
+    /// the constraint: `.tinted(.blue).stillEffect` is not an expression.
+    ///
+    /// Callers do not usually name this type: `View.slideStyle(_:)` has an overload that takes it, so
+    /// `.solid(.blue)` and `.solid(.blue).stillEffect` both pass straight to the modifier.
+    ///
+    /// Where a `SlideStyle` is needed as a stored value, ask for ``slideStyle``. Swift has no implicit
+    /// conversions, and an initializer taking this type made `SlideStyle(…)` ambiguous at every other
+    /// call site — so the explicit property is the cost of stating the constraint in the type system.
+    public struct Solid {
+        var style: SlideStyle
+
+        /// The style without any effect, for passing where a plain ``SlideStyle`` is wanted.
+        public var slideStyle: SlideStyle { style }
+
+        /// Ripples trailing the knob: a low, slow swell, like a heavy liquid.
+        ///
+        /// The cheapest of the three — a wide wavefront spreads the same displacement over more pixels,
+        /// so the peak offset stays small and the rasterised area with it.
+        public var stillEffect: SlideStyle { effect(.still) }
+
+        /// Ripples trailing the knob: tighter, faster rings. Reads most like water.
+        public var waterEffect: SlideStyle { effect(.water) }
+
+        /// Ripples trailing the knob: sharp and short-lived, struck often.
+        public var splashEffect: SlideStyle { effect(.splash) }
+
+        /// Ripples with parameters of your own.
+        public func rippleEffect(_ wake: SlideWake) -> SlideStyle { effect(wake) }
+
+        private func effect(_ wake: SlideWake) -> SlideStyle {
+            var copy = style
+            copy.wake = wake
+            return copy
+        }
+    }
+}
+
 
 extension SlideStyle.Surface {
     /// Whether this surface survives being rasterised by a `distortionEffect`.
@@ -143,8 +209,11 @@ extension SlideStyle.Surface {
     /// flattens its content first — which leaves the capsule drawing nothing at all. A flat
     /// `ShapeStyle` has no such dependency and distorts correctly.
     ///
-    /// Measured, not assumed: a glass capsule under `.slideWake(.still)` renders as an empty rectangle
-    /// with only the knob and label visible.
+    /// Measured, not assumed: a distorted glass capsule renders as empty space, with only the knob and
+    /// label visible.
+    ///
+    /// Unreachable through the public API now that effects hang off ``SlideStyle/Solid`` — kept as the
+    /// backstop for a `SlideStyle` assembled by hand, where `surface` and `wake` are both settable.
     var survivesDistortion: Bool {
         switch self {
         case .glass, .clearGlass: false
@@ -168,7 +237,21 @@ extension EnvironmentValues {
 
 extension View {
     /// Sets how slide-to-confirm controls in this view are painted.
+    ///
+    /// ```swift
+    /// VStack { … }
+    ///     .slideStyle(.tinted(.green))
+    /// ```
     public func slideStyle(_ style: SlideStyle) -> some View {
         environment(\.slideStyle, style)
+    }
+
+    /// Sets how slide-to-confirm controls in this view are painted, on a flat surface.
+    ///
+    /// An overload so ``SlideStyle/solid(_:surface:inset:height:)`` can be passed with or without an
+    /// effect on the end — `.solid(.blue)` and `.solid(.blue).stillEffect` both work, and no caller has
+    /// to know that one of them returns a different type.
+    public func slideStyle(_ style: SlideStyle.Solid) -> some View {
+        environment(\.slideStyle, style.slideStyle)
     }
 }

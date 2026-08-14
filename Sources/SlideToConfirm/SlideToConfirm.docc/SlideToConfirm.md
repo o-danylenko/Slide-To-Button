@@ -83,16 +83,24 @@ itself:
 - `.slideConfirm` carries the knob the rest of the way once the threshold is crossed.
 - `.slideAppearance` scales the knob as a slide begins and ends.
 
-The style and wake modifiers are likewise extensions: `View.slideStyle(_:)` and `View.slideWake(_:)`.
+The style modifier is likewise an extension: `View.slideStyle(_:)`.
 
 ## Effects
 
-The knob's position is published as a ``SlideKnob`` preference, which is the seam a visual effect
-attaches to. ``SlideWake`` is the one built in: ripples trailing the knob, applied with
-`View.slideWake(_:)` and needing a non-glass surface, since a distortion pass rasterises what it bends.
+``SlideWake`` adds ripples trailing the knob, as though it were dragged across water. It is reached
+through the style rather than a modifier of its own:
 
-The dependency points inward. A control without the modifier carries no ripple storage and runs no
-timeline, and the control itself does not know the effect exists.
+```swift
+.slideStyle(.solid(.blue).stillEffect)
+```
+
+That is deliberate. A distortion pass rasterises what it bends, and Liquid Glass samples what lies
+behind it at composite time — so a distorted glass capsule draws nothing at all. Hanging the effects
+off the value ``SlideStyle/solid(_:surface:inset:height:)`` returns puts them out of a glass style's
+reach: `.tinted(.blue).stillEffect` is not an expression. The impossible combination does not compile
+rather than compiling and quietly doing nothing.
+
+A style carrying no wake allocates no ripple storage and runs no timeline.
 
 ## Topics
 
@@ -108,7 +116,6 @@ timeline, and the control itself does not know the effect exists.
 ### Reading the gesture
 
 - ``SlideState``
-- ``SlideKnob``
 
 ### Effects
 
