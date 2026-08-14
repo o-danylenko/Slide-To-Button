@@ -10,7 +10,14 @@ let package = Package(
         .library(name: "SlideToConfirm", targets: ["SlideToConfirm"])
     ],
     targets: [
-        .target(name: "SlideToConfirm", path: "Sources/SlideToConfirm"),
+        // The Metal source links into this target's own resource bundle, which is what gives the
+        // module a `Bundle.module` to load the shader library from. Declaring it also stops SwiftPM
+        // warning about an unhandled file.
+        .target(
+            name: "SlideToConfirm",
+            path: "Sources/SlideToConfirm",
+            resources: [.process("SlideWake.metal")]
+        ),
         .testTarget(
             name: "SlideToConfirmTests",
             dependencies: ["SlideToConfirm"],

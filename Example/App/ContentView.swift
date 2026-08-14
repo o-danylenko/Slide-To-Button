@@ -12,11 +12,12 @@ struct ContentView: View {
         case materials = "Materials"
         case sizing = "Sizing"
         case external = "External"
+        case wake = "Wake"
 
         var id: Self { self }
     }
 
-    @State private var demo: Demo = .confirm
+    @State private var demo: Demo = .wake
 
     var body: some View {
         ZStack {
@@ -34,6 +35,7 @@ struct ContentView: View {
                 case .materials: MaterialsDemo()
                 case .sizing: SizingDemo()
                 case .external: ExternalConfirmDemo()
+                case .wake: WakeDemo()
                 }
 
                 Spacer(minLength: 0)

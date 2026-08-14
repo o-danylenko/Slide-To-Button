@@ -136,6 +136,23 @@ extension SlideStyle {
     }
 }
 
+extension SlideStyle.Surface {
+    /// Whether this surface survives being rasterised by a `distortionEffect`.
+    ///
+    /// Liquid Glass does not. It samples what lies behind it at composite time, and a distortion pass
+    /// flattens its content first — which leaves the capsule drawing nothing at all. A flat
+    /// `ShapeStyle` has no such dependency and distorts correctly.
+    ///
+    /// Measured, not assumed: a glass capsule under `.slideWake(.still)` renders as an empty rectangle
+    /// with only the knob and label visible.
+    var survivesDistortion: Bool {
+        switch self {
+        case .glass, .clearGlass: false
+        case .shapeStyle: true
+        }
+    }
+}
+
 // MARK: - Environment
 
 private struct SlideStyleKey: EnvironmentKey {

@@ -83,7 +83,16 @@ itself:
 - `.slideConfirm` carries the knob the rest of the way once the threshold is crossed.
 - `.slideAppearance` scales the knob as a slide begins and ends.
 
-The style modifier is likewise an extension: `View.slideStyle(_:)`.
+The style and wake modifiers are likewise extensions: `View.slideStyle(_:)` and `View.slideWake(_:)`.
+
+## Effects
+
+The knob's position is published as a ``SlideKnob`` preference, which is the seam a visual effect
+attaches to. ``SlideWake`` is the one built in: ripples trailing the knob, applied with
+`View.slideWake(_:)` and needing a non-glass surface, since a distortion pass rasterises what it bends.
+
+The dependency points inward. A control without the modifier carries no ripple storage and runs no
+timeline, and the control itself does not know the effect exists.
 
 ## Topics
 
@@ -99,3 +108,8 @@ The style modifier is likewise an extension: `View.slideStyle(_:)`.
 ### Reading the gesture
 
 - ``SlideState``
+- ``SlideKnob``
+
+### Effects
+
+- ``SlideWake``

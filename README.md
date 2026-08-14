@@ -45,6 +45,7 @@ below that it falls back to a translucent fill, and nothing in the API mentions 
 - [Progress in the knob](#progress-in-the-knob)
 - [Styles](#styles)
 - [Size and density](#size-and-density)
+- [Ripples](#ripples)
 - [Accessibility](#accessibility)
 - [How it works](#how-it-works)
 - [Example app](#example-app)
@@ -162,10 +163,64 @@ with Dynamic Type.
 Pass `height: nil` where the label must be free to grow — multi-line copy, or the accessibility text
 sizes, which a fixed height cannot expand to fit.
 
+## Ripples
+
+Optional. The knob can leave a wake behind it, as though it were dragged across water:
+
+```swift
+SlideToConfirm(isConfirmed: $isSending) { send() } label: {
+    Text("Slide to Confirm")
+}
+.slideStyle(.solid(.blue))
+.slideWake(.still)
+```
+
+Three presets, cheapest first: `.still`, `.water`, `.splash`.
+
+<details>
+<summary><strong>How it works, and why it needs a solid surface</strong></summary>
+
+<br>
+
+Each place the knob has been becomes a ripple source that keeps radiating after the knob has moved on.
+That is what makes it a wake rather than a wobble — a single origin tracking the knob cannot leave
+anything behind it. The wave is born at its source and travels outward at a finite speed, so the phase
+is written `k * (distance - speed * age)`: pixels near that moving radius are in the crest, and the rest
+are windowed out.
+
+Sources are emitted on a **time** cadence, not a distance threshold. Water has no threshold; it is
+disturbed continuously while something moves through it. Pacing by distance makes the surface respond
+in steps, which reads as a mechanism rather than a liquid. Ripple strength follows the knob's speed, so
+a slow drag leaves a faint trail and a flick a strong one.
+
+Displacement is radial, which is what makes each ring act as a lens, and decays twice: with age,
+because the disturbance dies, and with distance, because a spreading ring divides its energy over a
+longer circumference. Ripples are retired when they decay below visibility rather than when a buffer
+fills — a fixed-size buffer evicts the oldest whether or not it has finished, and at low damping it has
+not.
+
+**Cost.** Measured on an iPhone 14 Pro with Metal System Trace over 13 seconds of dragging: 0.38ms mean
+per encoder, 3.01ms worst, GPU busy 4.5% of the window, thermal state Fair throughout. Two early-outs
+in the shader — dead ripple, and pixel outside the wavefront — mean most sources cost almost nothing
+most of the time. Nothing is allocated and no timeline runs until a ripple exists.
+
+**Why solid only.** `distortionEffect` rasterises what it bends. Liquid Glass samples what lies behind
+it at composite time, so once flattened it has nothing left to sample and the capsule draws nothing at
+all. The two cannot be composed at the drawing layer, so this is a choice between materials rather than
+a limitation to work around: on a glass style the wake is skipped and the control renders normally.
+
+**Design.** The control publishes one value — `SlideKnob`, a centre, a diameter, and whether a finger
+is down — through a preference. The wake is a `ViewModifier` that reads it and owns its own trail. So
+the dependency points inward: `SlideToConfirm` does not know the effect exists, a control without the
+modifier carries no ripple storage, and a second effect needs no change to the control.
+
+</details>
+
 ## Accessibility
 
 - **VoiceOver** substitutes a plain button, because a drag cannot be performed through it.
-- **Reduce Motion** confirms immediately instead of springing the knob to the end.
+- **Reduce Motion** confirms immediately instead of springing the knob to the end, and suppresses the
+  wake entirely — ripples carry no information the knob does not.
 - **Dynamic Type** scales the height, the inset and the label together.
 - **Haptics** fire at both ends of the gesture.
 
@@ -179,6 +234,7 @@ Four types, each with a single job:
 | `SlideGeometry` | translation and size to progress | CoreGraphics |
 | `SlideToConfirm` | the gesture and its storage | SwiftUI |
 | `SlideTrack` | drawing | SwiftUI |
+| `SlideWake` | ripples, if applied | SwiftUI + Metal |
 
 `SlideTrack` holds no `@State`, no `@GestureState` and no gesture, so no change to how the control
 looks can regress how it drags.
