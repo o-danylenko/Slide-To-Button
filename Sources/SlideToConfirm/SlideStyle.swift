@@ -255,3 +255,19 @@ extension View {
         environment(\.slideStyle, style.slideStyle)
     }
 }
+
+extension SlideStyle.Solid {
+    /// Mirrors ``SlideStyle/solid(_:surface:inset:height:)`` so a leading-dot call can resolve here.
+    ///
+    /// Without it, `.slideStyle(.solid(.orange))` fails: the leading dot searches the first overload's
+    /// parameter type, finds `SlideStyle.solid`, and rejects the `Solid` it returns rather than trying
+    /// the overload that accepts one.
+    public static func solid<S: ShapeStyle>(
+        _ tint: Color,
+        surface: S = .quaternary,
+        inset: CGFloat = 4,
+        height: CGFloat? = 52
+    ) -> SlideStyle.Solid {
+        SlideStyle.solid(tint, surface: surface, inset: inset, height: height)
+    }
+}
